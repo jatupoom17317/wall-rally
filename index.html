@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wall Rally Check-in</title>
+    <!-- โหลดไลบรารีสแกน QR Code จาก Html5Qrcode -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 20px; background: #f4f4f9; }
+        #reader { width: 100%; max-width: 400px; margin: auto; }
+        .box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: inline-block; width: 100%; max-width: 400px; box-sizing: border-box;}
+        input { padding: 10px; width: 80%; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
+        button { padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; }
+        #result { margin-top: 15px; font-weight: bold; color: #333; }
+    </style>
+</head>
+<body>
+
+    <h2>🎮 ระบบเช็คอิน Wall Rally</h2>
+    
+    <div class="box">
+        <div id="user-setup">
+            <p>กรอกชื่อหรือรหัสผู้เล่นก่อนเริ่มสแกน:</p>
+            <input type="text" id="username" placeholder="เช่น Somchai_01">
+            <br>
+            <button onclick="startApp()">เริ่มสแกน QR Code</button>
+        </div>
+
+        <div id="scanner-container" style="display:none;">
+            <p>ผู้เล่น: <span id="display-user" style="color:blue;"></span></p>
+            <div id="reader"></div>
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        let userName = "";
+        // ⚠️ วาง Google Apps Script Web App URL ที่ได้จากขั้นตอนที่ 1 ตรงนี้
+        const SCRIPT_URL = "https://script.google.com/macros/s/YOUR_APPS_SCRIPT_URL/exec";
+
+        function startApp() {
+            userName = document.getElementById("username").value.trim();
+            if (!userName) {
+                alert("กรุณากรอกชื่อผู้เล่นก่อนครับ");
+                return;
+            }
+            document.getElementById("user-setup").style.display = "none";
+            document.getElementById("scanner-container").style.display = "block";
+            document.getElementById("display-user").innerText = userName;
+
+            initScanner();
+        }
+
+        function initScanner() {
+            const html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start(
+                { facingMode: "environment" }, // ใช้กล้องหลังมือถือ
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                (decodedText, decodedResult) => {
+                    // เมื่อสแกน QR Code สำเร็จ (สมมติ QR Code แต่ละจุดคือเลขจุด เช่น "Point-01")
+                    // หรือถ้ารหัสใน QR คือ URL เช่น domain.com/?point=1 ให้ดึงค่ามาใช้
+                    sendDataToSheet(decodedText);
+                    
+                    // ปิดกล้องชั่วคราวกันสแกนซ้ำรัวๆ
+                    html5QrCode.stop();
+                },
+                (errorMessage) => {
+                    // กำลังสแกนหา...
+                }
+            ).catch(err => {
+                alert("ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตการใช้งานกล้อง หรือเปิดผ่านเบราว์เซอร์อื่น");
+            });
+        }
+
+        function sendDataToSheet(checkpointId) {
+            document.getElementById("result").innerText = "กำลังบันทึกข้อมูล...";
+
+            // ส่งข้อมูลแบบ POST ไปที่ Google Apps Script
+            fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors", // จำเป็นเมื่อยิงเข้า Google Apps Script
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    userId: userName,
+                    checkpoint: checkpointId
+                })
+            })
+            .then(response => {
+                document.getElementById("result").innerHTML = `<span style="color:green;">✅ เช็คอินสำเร็จที่: ${checkpointId}</span>`;
+                setTimeout(() => {
+                    location.reload(); // รีโหลดเพื่อให้สแกนจุดถัดไปได้
+                }, 3000);
+            })
+            .catch(error => {
+                document.getElementById("result").innerHTML = `<span style="color:red;">❌ เกิดข้อผิดพลาด ลองใหม่อีกครั้ง</span>`;
+            });
+        }
+    </script>
+</body>
+</html>
