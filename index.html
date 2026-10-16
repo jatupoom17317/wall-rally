@@ -3,97 +3,260 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wall Rally Check-in</title>
-    <!-- โหลดไลบรารีสแกน QR Code จาก Html5Qrcode -->
+    <title>ระบบสะสมจุดเช็คอิน - Wall Rally</title>
+    <!-- Google Fonts ภาษาไทย Prompt -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- ไลบรารีสแกน QR Code -->
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 20px; background: #f4f4f9; }
-        #reader { width: 100%; max-width: 400px; margin: auto; }
-        .box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: inline-block; width: 100%; max-width: 400px; box-sizing: border-box;}
-        input { padding: 10px; width: 80%; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
-        button { padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; }
-        #result { margin-top: 15px; font-weight: bold; color: #333; }
+        * {
+            box-sizing: border-box;
+            font-family: 'Prompt', sans-serif;
+        }
+        body {
+            background-color: #f4f1ea;
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            width: 100%;
+            max-width: 450px;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            padding: 24px 20px;
+            text-align: center;
+            border: 1px solid #e0dacf;
+        }
+        .logo-title {
+            color: #5c3a21;
+            font-size: 22px;
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+        .sub-title {
+            color: #7d6e5d;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .card {
+            background: #faf8f5;
+            border: 1px solid #eee8dd;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #d0c5b4;
+            border-radius: 10px;
+            font-size: 16px;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s;
+            margin-bottom: 12px;
+        }
+        input[type="text"]:focus {
+            border-color: #8c6239;
+        }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .btn:active {
+            transform: scale(0.98);
+        }
+        .btn-primary {
+            background: #8c6239;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #734f2d;
+        }
+        .btn-success {
+            background: #2e7d32;
+            color: white;
+        }
+        .btn-outline {
+            background: transparent;
+            color: #d32f2f;
+            border: 1px solid #d32f2f;
+            padding: 6px 12px;
+            font-size: 13px;
+            border-radius: 6px;
+            margin-top: 8px;
+            width: auto;
+        }
+        #reader {
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #8c6239;
+            background: #000;
+        }
+        .user-badge {
+            background: #f0e8dc;
+            color: #5c3a21;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        #result {
+            margin-top: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            min-height: 24px;
+        }
+        .status-success { color: #2e7d32; }
+        .status-error { color: #c62828; }
+        .status-info { color: #1565c0; }
     </style>
 </head>
 <body>
 
-    <h2>🎮 ระบบเช็คอิน Wall Rally</h2>
-    
-    <div class="box">
-        <div id="user-setup">
-            <p>กรอกชื่อหรือรหัสผู้เล่นก่อนเริ่มสแกน:</p>
-            <input type="text" id="username" placeholder="เช่น Somchai_01">
-            <br>
-            <button onclick="startApp()">เริ่มสแกน QR Code</button>
+    <div class="container">
+        <h1 class="logo-title">🏛️ กิจกรรม Wall Rally</h1>
+        <p class="sub-title">สแกน QR Code เพื่อสะสมจุดเช็คอิน</p>
+
+        <!-- หน้าจอกรอกชื่อก่อนเล่น -->
+        <div id="setup-section" class="card">
+            <label style="display:block; margin-bottom: 10px; font-size: 15px; font-weight: 500;">
+                กรอกชื่อหรือรหัสผู้เข้าร่วมงาน
+            </label>
+            <input type="text" id="username" placeholder="เช่น คุณสมชาย หรือ A-01">
+            <button class="btn btn-primary" onclick="handleSaveUser()">เริ่มต้นสแกนจุด</button>
         </div>
 
-        <div id="scanner-container" style="display:none;">
-            <p>ผู้เล่น: <span id="display-user" style="color:blue;"></span></p>
+        <!-- หน้าจอสำหรับเปิดกล้องสแกน -->
+        <div id="scan-section" style="display: none;">
+            <div class="user-badge">
+                <span>👤 <span id="display-name"></span></span>
+                <button class="btn-outline" onclick="handleChangeUser()">เปลี่ยนชื่อ</button>
+            </div>
+
             <div id="reader"></div>
             <div id="result"></div>
+
+            <button id="rescan-btn" class="btn btn-primary" style="display: none; margin-top: 15px;" onclick="handleRestartScan()">
+                📷 สแกนจุดถัดไป
+            </button>
         </div>
     </div>
 
     <script>
-        let userName = "";
-        // ⚠️ วาง Google Apps Script Web App URL ที่ได้จากขั้นตอนที่ 1 ตรงนี้
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxpdrWG1x-QHz0NXa5Gh1smGjcCIFOfre_Z3Cxma1rVdOe3ukHQZ5VDj9nAKM7leiE/exec";
+        // ⚠️ ใส่ Web App URL ของ Google Apps Script ของคุณที่ลงท้ายด้วย /exec ตรงนี้
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyHf7hllqVO3nT9uazVbEodkSWeTWjSU-XHYzfGy3CrEh4lWYqG-vfIwfirPbmKwfkA/exec";
 
-        function startApp() {
-            userName = document.getElementById("username").value.trim();
-            if (!userName) {
-                alert("กรุณากรอกชื่อผู้เล่นก่อนครับ");
+        let html5QrCode = null;
+        let isProcessing = false;
+
+        window.onload = function() {
+            const savedName = localStorage.getItem("wall_rally_user");
+            if (savedName) {
+                showScanSection(savedName);
+            }
+        };
+
+        function handleSaveUser() {
+            const name = document.getElementById("username").value.trim();
+            if (!name) {
+                alert("กรุณากรอกชื่อหรือรหัสผู้เข้าร่วมก่อนครับ");
                 return;
             }
-            document.getElementById("user-setup").style.display = "none";
-            document.getElementById("scanner-container").style.display = "block";
-            document.getElementById("display-user").innerText = userName;
-
-            initScanner();
+            localStorage.setItem("wall_rally_user", name);
+            showScanSection(name);
         }
 
-        function initScanner() {
-            const html5QrCode = new Html5Qrcode("reader");
+        function handleChangeUser() {
+            if (confirm("คุณต้องการเปลี่ยนชื่อผู้เข้าใช้งานใช่หรือไม่?")) {
+                localStorage.removeItem("wall_rally_user");
+                if (html5QrCode && html5QrCode.isScanning) {
+                    html5QrCode.stop().then(() => location.reload());
+                } else {
+                    location.reload();
+                }
+            }
+        }
+
+        function showScanSection(name) {
+            document.getElementById("setup-section").style.display = "none";
+            document.getElementById("scan-section").style.display = "block";
+            document.getElementById("display-name").innerText = name;
+            
+            initCamera(name);
+        }
+
+        function initCamera(userName) {
+            html5QrCode = new Html5Qrcode("reader");
+            startScanning(userName);
+        }
+
+        function startScanning(userName) {
+            isProcessing = false;
+            document.getElementById("rescan-btn").style.display = "none";
+            document.getElementById("result").innerHTML = '<span class="status-info">📷 กำลังเปิดกล้องเพื่อสแกน QR Code...</span>';
+
             html5QrCode.start(
-                { facingMode: "environment" }, // ใช้กล้องหลังมือถือ
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                (decodedText, decodedResult) => {
-                    // เมื่อสแกน QR Code สำเร็จ (สมมติ QR Code แต่ละจุดคือเลขจุด เช่น "Point-01")
-                    // หรือถ้ารหัสใน QR คือ URL เช่น domain.com/?point=1 ให้ดึงค่ามาใช้
-                    sendDataToSheet(decodedText);
-                    
-                    // ปิดกล้องชั่วคราวกันสแกนซ้ำรัวๆ
-                    html5QrCode.stop();
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 220, height: 220 } },
+                (decodedText) => {
+                    if (!isProcessing) {
+                        isProcessing = true;
+                        html5QrCode.stop().then(() => {
+                            sendData(userName, decodedText);
+                        }).catch(err => console.error(err));
+                    }
                 },
                 (errorMessage) => {
-                    // กำลังสแกนหา...
+                    // กำลังค้นหา QR Code...
                 }
             ).catch(err => {
-                alert("ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตการใช้งานกล้อง หรือเปิดผ่านเบราว์เซอร์อื่น");
+                document.getElementById("result").innerHTML = '<span class="status-error">❌ ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตสิทธิ์การใช้กล้องในเบราว์เซอร์</span>';
             });
         }
 
-        function sendDataToSheet(checkpointId) {
-            document.getElementById("result").innerText = "กำลังบันทึกข้อมูล...";
+        function handleRestartScan() {
+            const userName = localStorage.getItem("wall_rally_user");
+            startScanning(userName);
+        }
 
-            // ส่งข้อมูลแบบ POST ไปที่ Google Apps Script
+        function sendData(userName, checkpointId) {
+            document.getElementById("result").innerHTML = '<span class="status-info">⏳ กำลังบันทึกข้อมูล...</span>';
+
             fetch(SCRIPT_URL, {
                 method: "POST",
-                mode: "no-cors", // จำเป็นเมื่อยิงเข้า Google Apps Script
+                mode: "no-cors",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     userId: userName,
                     checkpoint: checkpointId
                 })
             })
-            .then(response => {
-                document.getElementById("result").innerHTML = `<span style="color:green;">✅ เช็คอินสำเร็จที่: ${checkpointId}</span>`;
-                setTimeout(() => {
-                    location.reload(); // รีโหลดเพื่อให้สแกนจุดถัดไปได้
-                }, 3000);
+            .then(() => {
+                document.getElementById("result").innerHTML = `<span class="status-success">✅ เช็คอินสำเร็จ!<br>ตำแหน่ง: <strong>${checkpointId}</strong></span>`;
+                document.getElementById("rescan-btn").style.display = "block";
             })
             .catch(error => {
-                document.getElementById("result").innerHTML = `<span style="color:red;">❌ เกิดข้อผิดพลาด ลองใหม่อีกครั้ง</span>`;
+                document.getElementById("result").innerHTML = '<span class="status-error">❌ เกิดข้อผิดพลาดในการส่งข้อมูล กรุณาลองใหม่อีกครั้ง</span>';
+                document.getElementById("rescan-btn").style.display = "block";
             });
         }
     </script>
